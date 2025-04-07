@@ -1,0 +1,15 @@
+# Ignore compiled binary
+dodoDb
+dodoDb.exe
+
+# Ignore object files
+*.o
+
+# Editor/OS files
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
+# Build files
+build/

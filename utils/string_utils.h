@@ -4,5 +4,6 @@
 using namespace std;
 
 string toLower(const string& str);
+string trim(const string& str);
 
 #endif

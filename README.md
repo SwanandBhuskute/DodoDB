@@ -56,7 +56,7 @@ Files (maybe): database_management.cpp and database_management.h
 ## How to run
 - Clone the project and type `make run` in the terminal of the project
 - If you get the error `The term 'make' is not recognized` then make sure
-- - Downloaded Git for Windows
+- - You have downloaded Git for Windows
 - - You can try this command in your Windows Powershell Administrator - `choco install make`
 - Then try again `make run`
 

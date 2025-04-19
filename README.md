@@ -1,5 +1,5 @@
 # 🚀 DodoDB
-DodoDB is a lightweight, beginner-friendly database engine written in C++, designed for learning database internals from scratch. It features a REPL interface, persistent storage, table management, and simple SQL-like operations.
+DodoDB is a lightweight, beginner-friendly database engine written in C++, designed for learning database internals from scratch. It features a REPL interface, persistent file storage, table management, and simple SQL-like operations.
 
 ### Tech Stack
 

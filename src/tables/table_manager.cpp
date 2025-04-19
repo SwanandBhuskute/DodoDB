@@ -2,7 +2,6 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
-// #include<bits/stdc++.h>
 
 using namespace std;
 
@@ -14,7 +13,7 @@ TableManager::TableManager()
     string fallback = "users";
 
     string tableToUse = lastUsed.empty() ? fallback : lastUsed;
-    string filename = "data/" + tableToUse + ".table.txt";
+    string filename = "data/" + tableToUse + "/" + tableToUse + ".table.txt";
 
     if (fs::exists(filename))
     {
@@ -42,12 +41,18 @@ TableManager::~TableManager()
 
 void TableManager::createTable(const string &tableName, const vector<string> &columns)
 {
-    string filename = "data/" + tableName + ".table.txt";
+    string tableDir = "data/" + tableName;
+    string filename = tableDir + "/" + tableName + ".table.txt";
 
     if (fs::exists(filename))
     {
         cout << "Table '" << tableName << "' already exists.\n";
         return;
+    }
+
+    if (!fs::exists(tableDir))
+    {
+        fs::create_directory(tableDir);
     }
 
     ofstream outFile(filename);
@@ -57,7 +62,6 @@ void TableManager::createTable(const string &tableName, const vector<string> &co
         return;
     }
 
-    // Save schema to file
     for (size_t i = 0; i < columns.size(); ++i)
     {
         outFile << columns[i];
@@ -67,11 +71,12 @@ void TableManager::createTable(const string &tableName, const vector<string> &co
     outFile << "\n";
     outFile.close();
 
-    // ✅ Create and store Table object in memory
-    Table *newTable = new Table(tableName, columns); // ✅ Fixed constructor
+    Table *newTable = new Table(tableName, columns);
     tables[tableName] = newTable;
     currentTableName = tableName;
     currentTable = newTable;
+
+    newTable->saveTableVersion();
 
     saveLastUsedTable(tableName);
 
@@ -80,7 +85,7 @@ void TableManager::createTable(const string &tableName, const vector<string> &co
 
 bool TableManager::useTable(const string &tableName)
 {
-    string filename = "data/" + tableName + ".table.txt";
+    string filename = "data/" + tableName + "/" + tableName + ".table.txt";
     if (!fs::exists(filename))
     {
         cout << "Table '" << tableName << "' does not exist.\n";

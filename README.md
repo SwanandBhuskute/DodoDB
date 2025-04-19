@@ -42,11 +42,16 @@ DodoDB is a lightweight, beginner-friendly database engine written in C++, desig
 - **Files**: `linenoise.c`, `linenoise.h`, `/meta/dodo_history.txt`
 
 ---
+### Phase 5: Support Git-like versioning and rollback support
+- Implemented saving versions on every insert, update, delete command to new v1/2/3.txt
+- Rollback to previous version implemented (all later versions will be deleted)
+- **Files**: `/data/{tableName}/versions/`, `table.cpp`, `table.h`
 
 ## Future scope
-### Phase 5: Multiple Databases Support
+### Phase 6: Multiple Databases Support
 Planning to implement something like supporting multiple databases and tables inside them. Currently all tables get created under single data/ folder.
 Files (maybe): database_management.cpp and database_management.h
+
 
 ## How to run
 - Clone the project and type `make run` in the terminal of the project
@@ -54,3 +59,14 @@ Files (maybe): database_management.cpp and database_management.h
 - - Downloaded Git for Windows
 - - You can try this command in your Windows Powershell Administrator - `choco install make`
 - Then try again `make run`
+
+## Available commands
+- `create table tableName (field1 type, field2 type, field3 type, ...)`
+- `insert value1 value2 value3` (as per fields)
+- `update set fieldName=value where fieldName=value`
+- `delete where fieldName=value`
+- `select` - print table data
+- `rollback v1` - rollback to specific version
+- `curr table` - for viewing current table
+- `use table tableName` - for using specific table
+- `describe` - show table info

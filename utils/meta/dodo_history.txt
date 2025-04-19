@@ -19,3 +19,53 @@ exit
 use table users
 select
 exit
+curr table
+create table users (id string, name string, age int)
+create table users (id string, name string, age string)
+exit
+create table users (id string, name string, age string)
+insert 1 swanand 22
+insert 2 jay 20
+select
+curr table
+exit
+create table bank (name string, accno int, city string)
+insert swanand 11 pune
+insert shravan 12 delhi
+exit
+create table users (id string, name string, age string)
+insert 1 swanand 22
+insert 2 jay 20
+exit
+create table users (id string, name string, age string)
+insert 1 swanand 22
+exit
+insert 1 swanand 22
+exit
+create table users (id string, name string, age string)
+insert 1 swanand 22
+insert 2 jay 20
+exit
+create table users (id string, name string, age string)
+insert 1 swanand 22
+insert 2 jay 20
+update set age=22 where name=jay
+exit
+select
+insert 3 gautam 21
+select
+rollback v2
+select
+insert 3 gautam 22
+insert 4 rushabh 23
+update set name=himanshu where age=23
+select
+exit
+create table bank (name string, accno string, city string)
+insert 1 swanand 22
+rollback v0
+insert swanand 11 pune
+insert shivam 12 mumbai
+update set name=jay where city=pune
+xeit
+exit

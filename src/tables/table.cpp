@@ -3,16 +3,17 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <filesystem>
 
 using namespace std;
+namespace fs = filesystem;
 
 Table::Table(const string &tableName, const vector<string> &columns)
     : name(tableName), columnNames(columns)
 {
-    string filename = "data/" + name + ".table.txt";
+    string filename = "data/" + name + "/" + name + ".table.txt";
     loadFromFile(filename);
 
-    // If table has no columns, this is a new table
     if (columnNames.empty())
     {
         columnNames = columns;
@@ -23,7 +24,7 @@ Table::Table(const string &tableName, const vector<string> &columns)
 Table::Table(const string &tableName)
     : name(tableName)
 {
-    string filename = "data/" + name + ".table.txt";
+    string filename = "data/" + name + "/" + name + ".table.txt";
     loadFromFile(filename);
 }
 
@@ -36,7 +37,8 @@ void Table::insertRow(const vector<string> &row)
     }
 
     rows.push_back(row);
-    saveToFile("data/" + name + ".table.txt");
+    saveToFile("data/" + name + "/" + name + ".table.txt");
+    saveTableVersion();
 }
 
 void Table::printAllRows() const
@@ -84,7 +86,8 @@ void Table::deleteRowsWhere(const string &columnName, const string &value)
 
     int afterCount = rows.size();
 
-    saveToFile("data/" + name + ".table.txt");
+    saveToFile("data/" + name + "/" + name + ".table.txt");
+    saveTableVersion();
 
     cout << "Deleted " << (beforeCount - afterCount) << " row(s)." << endl;
 }
@@ -121,7 +124,8 @@ void Table::updateRowsWhere(const string &conditionCol, const string &conditionV
         }
     }
 
-    saveToFile("data/" + name + ".table.txt");
+    saveToFile("data/" + name + "/" + name + ".table.txt");
+    saveTableVersion();
 
     cout << "Updated " << updatedCount << " row(s)." << endl;
 }
@@ -133,7 +137,7 @@ void Table::describeTable(const string &tableName) const
 
     for (const auto &col : columnNames)
     {
-        cout << "- " << col << endl;
+        cout << "--- " << col << endl;
     }
 }
 
@@ -146,7 +150,6 @@ void Table::saveToFile(const string &filename) const
         return;
     }
 
-    // Save column headers
     for (size_t i = 0; i < columnNames.size(); ++i)
     {
         outFile << columnNames[i];
@@ -155,7 +158,6 @@ void Table::saveToFile(const string &filename) const
     }
     outFile << "\n";
 
-    // Save rows
     for (const auto &row : rows)
     {
         for (size_t i = 0; i < row.size(); ++i)
@@ -208,4 +210,152 @@ void Table::loadFromFile(const string &filename)
     }
 
     inFile.close();
+}
+
+string Table::getTableData()
+{
+    ostringstream dataStream;
+
+    for (size_t i = 0; i < columnNames.size(); ++i)
+    {
+        dataStream << columnNames[i];
+        if (i != columnNames.size() - 1)
+            dataStream << ",";
+    }
+    dataStream << "\n";
+
+    for (const auto &row : rows)
+    {
+        for (size_t i = 0; i < row.size(); ++i)
+        {
+            dataStream << row[i];
+            if (i != row.size() - 1)
+                dataStream << ",";
+        }
+        dataStream << "\n";
+    }
+
+    return dataStream.str();
+}
+
+void Table::saveTableVersion()
+{
+    fs::path versionsDir = "data/" + name + "/versions/";
+    if (!fs::exists(versionsDir))
+    {
+        fs::create_directory(versionsDir);
+    }
+
+    int versionNumber = 0;
+    for (const auto &entry : fs::directory_iterator(versionsDir))
+    {
+        if (entry.is_regular_file() && entry.path().extension() == ".txt")
+        {
+            string filename = entry.path().filename().string();
+            if (filename[0] == 'v')
+            {
+                try
+                {
+                    int fileVersion = stoi(filename.substr(1, filename.find(".txt") - 1));
+                    versionNumber = max(versionNumber, fileVersion + 1);
+                }
+                catch (const invalid_argument &e)
+                {
+                    continue;
+                }
+            }
+        }
+    }
+
+    string tableData = getTableData();
+    fs::path versionFilePath = versionsDir / ("v" + to_string(versionNumber) + ".txt");
+    ofstream versionFile(versionFilePath);
+
+    if (!versionFile.is_open())
+    {
+        cerr << "Failed to open version file for writing.\n";
+        return;
+    }
+
+    versionFile << tableData;
+    versionFile.close();
+
+    cout << "New version saved as " << versionFilePath << endl;
+}
+
+void Table::rollback(const string &versionName)
+{
+    int version = stoi(versionName.substr(1));
+    fs::path versionsDir = "data/" + name + "/versions/";
+    fs::path versionFilePath = versionsDir / ("v" + to_string(version) + ".txt");
+
+    if (!fs::exists(versionFilePath))
+    {
+        cerr << "Error: Version " << version << " does not exist.\n";
+        return;
+    }
+
+    ifstream versionFile(versionFilePath);
+    if (!versionFile.is_open())
+    {
+        cerr << "Error: Could not open version file for reading.\n";
+        return;
+    }
+
+    string line;
+    vector<string> newColumnNames;
+    vector<vector<string>> newRows;
+
+    bool isFirstLine = true;
+    while (getline(versionFile, line))
+    {
+        stringstream ss(line);
+        string value;
+        vector<string> row;
+
+        while (getline(ss, value, ','))
+        {
+            row.push_back(value);
+        }
+
+        if (isFirstLine)
+        {
+            newColumnNames = row;
+            isFirstLine = false;
+        }
+        else
+        {
+            newRows.push_back(row);
+        }
+    }
+
+    columnNames = newColumnNames;
+    rows = newRows;
+
+    for (const auto &entry : fs::directory_iterator(versionsDir))
+    {
+        if (entry.is_regular_file() && entry.path().extension() == ".txt")
+        {
+            string filename = entry.path().filename().string();
+            if (filename[0] == 'v')
+            {
+                try
+                {
+                    int fileVersion = stoi(filename.substr(1, filename.find(".txt") - 1));
+                    if (fileVersion > version)
+                    {
+                        fs::remove(entry.path());
+                    }
+                }
+                catch (const invalid_argument &e)
+                {
+                    continue;
+                }
+            }
+        }
+    }
+
+    saveToFile("data/" + name + "/" + name + ".table.txt");
+
+    cout << "Rollback to version " << version << " complete.\n";
 }

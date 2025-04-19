@@ -8,6 +8,7 @@
 #include "./commands/useTableCommand.cpp"
 #include "./commands/currTableCommand.cpp"
 #include "./commands/describeTableCommand.cpp"
+#include "./commands/rollbackCommand.cpp"
 using namespace std;
 
 TableManager manager;
@@ -47,6 +48,10 @@ void handleInput(string &input)
     else if (input.substr(0, 8) == "describe")
     {
         describeTableCommand(input);
+    }
+    else if (input.substr(0, 8) == "rollback")
+    {
+        rollbackCommand(input);
     }
     else
     {

@@ -23,4 +23,8 @@ public:
     Table *getCurrentTable();
     string getCurrentTableName() const;
     vector<string> listTables() const;
+
+    void saveLastUsedTable(const string &tableName);
+    string loadLastUsedTable();
+    void setCurrentTable(Table *table, const string &tableName);
 };

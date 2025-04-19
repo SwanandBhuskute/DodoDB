@@ -63,6 +63,80 @@ void Table::printAllRows() const
     }
 }
 
+void Table::deleteRowsWhere(const string &columnName, const string &value)
+{
+    auto it = find(columnNames.begin(), columnNames.end(), columnName);
+    if (it == columnNames.end())
+    {
+        cout << "Error: Column '" << columnName << "' not found." << endl;
+        return;
+    }
+
+    int colIndex = distance(columnNames.begin(), it);
+    int beforeCount = rows.size();
+
+    rows.erase(remove_if(rows.begin(), rows.end(),
+                         [&](const vector<string> &row)
+                         {
+                             return row[colIndex] == value;
+                         }),
+               rows.end());
+
+    int afterCount = rows.size();
+
+    saveToFile("data/" + name + ".table.txt");
+
+    cout << "Deleted " << (beforeCount - afterCount) << " row(s)." << endl;
+}
+
+void Table::updateRowsWhere(const string &conditionCol, const string &conditionVal,
+                            const string &targetCol, const string &newValue)
+{
+    auto condIt = find(columnNames.begin(), columnNames.end(), conditionCol);
+    auto targetIt = find(columnNames.begin(), columnNames.end(), targetCol);
+
+    if (condIt == columnNames.end())
+    {
+        cout << "Error: Column '" << conditionCol << "' not found." << endl;
+        return;
+    }
+
+    if (targetIt == columnNames.end())
+    {
+        cout << "Error: Column '" << targetCol << "' not found." << endl;
+        return;
+    }
+
+    int condIndex = distance(columnNames.begin(), condIt);
+    int targetIndex = distance(columnNames.begin(), targetIt);
+
+    int updatedCount = 0;
+
+    for (auto &row : rows)
+    {
+        if (row[condIndex] == conditionVal)
+        {
+            row[targetIndex] = newValue;
+            updatedCount++;
+        }
+    }
+
+    saveToFile("data/" + name + ".table.txt");
+
+    cout << "Updated " << updatedCount << " row(s)." << endl;
+}
+
+void Table::describeTable(const string &tableName) const
+{
+    cout << "Table: " << tableName << endl;
+    cout << "Columns: " << endl;
+
+    for (const auto &col : columnNames)
+    {
+        cout << "- " << col << endl;
+    }
+}
+
 void Table::saveToFile(const string &filename) const
 {
     ofstream outFile(filename);
@@ -134,67 +208,4 @@ void Table::loadFromFile(const string &filename)
     }
 
     inFile.close();
-}
-
-void Table::deleteRowsWhere(const string &columnName, const string &value)
-{
-    auto it = find(columnNames.begin(), columnNames.end(), columnName);
-    if (it == columnNames.end())
-    {
-        cout << "Error: Column '" << columnName << "' not found." << endl;
-        return;
-    }
-
-    int colIndex = distance(columnNames.begin(), it);
-    int beforeCount = rows.size();
-
-    rows.erase(remove_if(rows.begin(), rows.end(),
-                         [&](const vector<string> &row)
-                         {
-                             return row[colIndex] == value;
-                         }),
-               rows.end());
-
-    int afterCount = rows.size();
-
-    saveToFile("data/" + name + ".table.txt");
-
-    cout << "Deleted " << (beforeCount - afterCount) << " row(s)." << endl;
-}
-
-void Table::updateRowsWhere(const string &conditionCol, const string &conditionVal,
-                            const string &targetCol, const string &newValue)
-{
-    auto condIt = find(columnNames.begin(), columnNames.end(), conditionCol);
-    auto targetIt = find(columnNames.begin(), columnNames.end(), targetCol);
-
-    if (condIt == columnNames.end())
-    {
-        cout << "Error: Column '" << conditionCol << "' not found." << endl;
-        return;
-    }
-
-    if (targetIt == columnNames.end())
-    {
-        cout << "Error: Column '" << targetCol << "' not found." << endl;
-        return;
-    }
-
-    int condIndex = distance(columnNames.begin(), condIt);
-    int targetIndex = distance(columnNames.begin(), targetIt);
-
-    int updatedCount = 0;
-
-    for (auto &row : rows)
-    {
-        if (row[condIndex] == conditionVal)
-        {
-            row[targetIndex] = newValue;
-            updatedCount++;
-        }
-    }
-
-    saveToFile("data/" + name + ".table.txt");
-
-    cout << "Updated " << updatedCount << " row(s)." << endl;
 }

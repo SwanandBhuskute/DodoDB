@@ -10,14 +10,25 @@ namespace fs = std::filesystem;
 
 TableManager::TableManager()
 {
-    string defaultTable = "users";
-    string filename = "data/" + defaultTable + ".table.txt";
+    string lastUsed = loadLastUsedTable();
+    string fallback = "users";
+
+    string tableToUse = lastUsed.empty() ? fallback : lastUsed;
+    string filename = "data/" + tableToUse + ".table.txt";
 
     if (fs::exists(filename))
     {
-        currentTableName = defaultTable;
-        currentTable = new Table({});
+        currentTableName = tableToUse;
+        currentTable = new Table(tableToUse);
         currentTable->loadFromFile(filename);
+        tables[tableToUse] = currentTable;
+        cout << "Loaded last used table: " << tableToUse << endl;
+    }
+    else
+    {
+        cout << "No table found to load. Start by creating a new one.\n";
+        currentTable = nullptr;
+        currentTableName = "";
     }
 }
 
@@ -62,6 +73,8 @@ void TableManager::createTable(const string &tableName, const vector<string> &co
     currentTableName = tableName;
     currentTable = newTable;
 
+    saveLastUsedTable(tableName);
+
     cout << "Table '" << tableName << "' created and loaded.\n";
 }
 
@@ -74,17 +87,15 @@ bool TableManager::useTable(const string &tableName)
         return false;
     }
 
-    // Clean up old currentTable
     if (currentTable)
         delete currentTable;
 
-    // Create and load new one
-    currentTable = new Table(tableName); // ✅ Pass table name
+    currentTable = new Table(tableName);
     currentTable->loadFromFile(filename);
     currentTableName = tableName;
-
-    // Save in table map
     tables[tableName] = currentTable;
+
+    saveLastUsedTable(tableName);
 
     cout << "Switched to table: " << tableName << endl;
     return true;
@@ -115,4 +126,42 @@ vector<string> TableManager::listTables() const
     }
 
     return tableNames;
+}
+
+void TableManager::saveLastUsedTable(const string &tableName)
+{
+    ofstream out("utils/meta/last_used_table.txt");
+    if (out.is_open())
+    {
+        out << tableName;
+        out.close();
+    }
+}
+
+string TableManager::loadLastUsedTable()
+{
+    ifstream inFile("utils/meta/last_used_table.txt");
+    if (!inFile.is_open())
+    {
+        return "";
+    }
+
+    string tableName;
+    getline(inFile, tableName);
+    inFile.close();
+
+    tableName.erase(tableName.find_last_not_of(" \n\r\t") + 1);
+    return tableName;
+}
+
+void TableManager::setCurrentTable(Table *table, const string &tableName)
+{
+    if (currentTable)
+        delete currentTable;
+
+    currentTable = table;
+    currentTableName = tableName;
+    tables[tableName] = table;
+
+    saveLastUsedTable(tableName);
 }

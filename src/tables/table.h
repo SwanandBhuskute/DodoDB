@@ -34,6 +34,7 @@ public:
     void updateRowsWhere(const string &conditionCol, const string &conditionVal,
                          const string &targetCol, const string &newValue);
     void printAllRows() const;
+    void describeTable(const string &tableName) const;
 
     // ✅ File I/O
     void saveToFile(const string &filename) const;

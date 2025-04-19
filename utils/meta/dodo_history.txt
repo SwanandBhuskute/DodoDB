@@ -1,0 +1,21 @@
+curr table
+select
+exit
+select
+use table users
+insert 5 manoj 34
+select
+exit
+select
+exit
+select
+use table bank
+exit
+use table bank
+select
+update set city=pune where accno=21
+update set city=pune where accno=12
+exit
+use table users
+select
+exit
